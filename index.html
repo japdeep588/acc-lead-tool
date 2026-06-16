@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="google-site-verification" content="dqMn16kUbzEiMPuBtw4wzdtnLIDAwI-pkN7RSD3Emus" />
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 
 <!-- ══ PRIMARY SEO — targets top India DA searches 2026 ══ -->
@@ -665,6 +664,29 @@ function saveLead(){
   const sc=calcScore(),all=JSON.parse(localStorage.getItem('acc_leads')||'[]');
   all.push({...lead,score:sc.t,pct:sc.p,level:sc.lv});
   localStorage.setItem('acc_leads',JSON.stringify(all));
+  // Send to Google Sheets
+  sendToSheets(sc);
+}
+function sendToSheets(sc){
+  const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwY2g4JM7a4HlrriLR4BbFlEk4OD1bJBuuoWtT7XHR5mwS5sUbAxroWtpKnS00px6LHxQ/exec';
+  let mx=-1,mn=4,mxk='sql',mnk='proj';
+  SK.forEach(k=>{const q=QS.find(x=>x.k===k),s=q.sc[ans[k]]||0;if(s>mx){mx=s;mxk=k;}if(s<mn){mn=s;mnk=k;}});
+  const payload={
+    timestamp: lead.ts,
+    name: lead.name,
+    phone: lead.phone,
+    email: lead.email,
+    pct: sc.p,
+    level: sc.lv,
+    strength: SL[mxk],
+    gap: SL[mnk]
+  };
+  fetch(SCRIPT_URL,{
+    method:'POST',
+    mode:'no-cors',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(payload)
+  }).catch(err=>console.log('Sheet sync error:',err));
 }
 function buildReport(){
   const sc=calcScore();
